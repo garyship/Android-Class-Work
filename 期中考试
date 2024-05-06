@@ -1,0 +1,130 @@
+MainActivity.kt
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            var isLoggedIn by remember { mutableStateOf(false) }
+            if (!isLoggedIn) {
+                LoginScreen(onLoginSuccess = { isLoggedIn = true })
+            } else {
+                NavHost(navController = rememberNavController(), startDestination = "index") {
+                    composable("index") { IndexScreen() }
+                    composable("teachers") { TeacherList(teacherList) }
+                    composable("students") { StudentList(studentList) }
+                    composable("logout") { Logout(onLogout = { isLoggedIn = false }) }
+                }
+            }
+        }
+    }
+}
+Data.kt
+@Immutable
+data class Teacher(
+    val id: Int,
+    val name: String,
+    val subject: String,
+    val age: Int,
+    val yearsOfTeaching: Int
+)
+
+@Immutable
+data class Student(
+    val id: Int,
+    val name: String,
+    val grade: String,
+    val age: Int,
+    val favoriteSubject: String
+)
+
+val teacherList = listOf(
+    Teacher(1, "hxf", "数学", 34, 10),
+    Teacher(2, "Alice", "英语", 35, 10),
+    Teacher(3, "oinke", "物理", 45, 10),
+    Teacher(4, "liyef", "地理", 36, 10),
+    Teacher(5, "Gelin", "计算机", 64, 10),
+
+    )
+
+val studentList = listOf(
+    Student(1, "ln", "11th", 17, "数学"),
+    Student(2, "DJH", "05th", 17, "计算机"),
+    Student(3, "Pq", "01th", 17, "物理"),
+    Student(4, "JoJo", "07th", 17, "地理"),
+    Student(5, "Dio", "13th", 17, "英语"),
+)
+index.kt
+@Composable
+fun index(navController: NavController) {
+    Scaffold(
+        bottomBar = { BottomNavigationBar(...) },
+        content = {
+            Column {
+                Text("Teachers: ${teacherList.size}")
+                Text("Students: ${studentList.size}")
+                Button(onClick = { navController.navigate("teachers") }) {
+                    Text("View Teachers")
+                }
+                Button(onClick = { navController.navigate("students") }) {
+                    Text("View Students")
+                }
+            }
+        }
+    )
+}
+A.kt
+@Composable
+fun TeacherList(teachers: List<Teacher>) {
+    LazyColumn {
+        items(teachers) { teacher ->
+            TeacherItem(teacher)
+        }
+    }
+}
+
+@Composable
+fun TeacherItem(teacher: Teacher) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Column {
+            Text(text = "Name: ${teacher.name}", fontWeight = FontWeight.Bold)
+            Text(text = "Subject: ${teacher.subject}")
+            Text(text = "Age: ${teacher.age}")
+            Text(text = "Years of Teaching: ${teacher.yearsOfTeaching}")
+
+        }
+    }
+}
+B.kt
+@Composable
+fun StudentList(students: List<Student>){
+    LazyColumn {
+        items(students) { student ->
+            StudentItem(student)
+        }
+    }
+}
+@Composable
+fun StudentItem(student: Student) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Column {
+            Text(text = "Name: ${student.name}", fontWeight = FontWeight.Bold)
+            Text(text = "Grade: ${student.grade}")
+            Text(text = "Age: ${student.age}")
+            Text(text = "Favorite Subject: ${student.favoriteSubject}")
+        }
+    }
+}
+C.kt
+@Composable
+fun Logout(onLogout: () -> Unit) {
+    Button(onClick = onLogout) {
+        Text("Logout")
+    }
+}
