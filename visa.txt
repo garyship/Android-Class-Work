@@ -1,0 +1,247 @@
+CreditCCard
+
+package com.example.djh
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun CreditCard(
+    cardNumber: String,
+    cardHolderName: String,
+    cardExpiry:String
+){
+    Card(
+        modifier = Modifier
+            .height(height = 200.dp)
+            .fillMaxWidth()
+            .padding(all = 10.dp),
+        elevation = CardDefaults.elevatedCardElevation()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.visa_logo),
+            contentDescription = "Visa Logo",
+            modifier = Modifier
+                .height(height = 38.dp)
+                .padding(all = 6.dp),
+            alignment = Alignment.TopStart
+        )
+        Text(
+            modifier = Modifier.padding(start = 8.dp),
+            text = "Credit card",
+            style = MaterialTheme.typography.labelSmall
+        )
+        Image(
+            painter = painterResource(id = R.drawable.chip),
+            contentDescription = "Visa logo",
+            modifier = Modifier
+                .height(height = 50.dp)
+                .padding(all = 6.dp),
+            alignment =Alignment.TopStart
+        )
+        Text(
+            modifier = Modifier
+                .padding(start = 10.dp)
+                .fillMaxWidth(),
+            text = cardNumber,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            modifier = Modifier
+                .padding(end = 10.dp)
+                .fillMaxWidth(),
+            text = "Expiry Date :$cardExpiry",
+            textAlign = TextAlign.End,
+            style = MaterialTheme.typography.labelSmall
+        )
+        Text(
+            modifier = Modifier.padding(start = 10.dp),
+            text = cardHolderName,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Preview
+@Composable
+fun CreditCCardPreview(){
+    CreditCard(
+        cardExpiry = "2026-04-14",
+        cardHolderName = "Test User",
+        cardNumber = "4245-7587-X786-452X"
+    )
+}
+
+
+
+volleyReqest
+package com.example.djh
+
+import android.content.Context
+import android.util.Log
+import androidx.compose.runtime.MutableState
+import com.android.volley.Request
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import org.json.JSONObject
+
+
+fun volleyReqest(context: Context, cardNum: MutableState<String>, cardExp:MutableState<String>){
+    val queue = Volley.newRequestQueue(context)
+    val url ="http://192.168.42.129:7885/credit_cards"
+    var response: JSONObject
+    val stringRequest= StringRequest(
+        Request.Method.GET,url,
+        {
+            Log.d("success","simpleRequest:${it}")
+            response=JSONObject(it)
+
+            cardNum.value=response.getString("credit_card_number")
+            cardExp.value=response.getString("credit_card_expiry_date")
+
+        },{
+            cardNum.apply { "0000-0000-0000-0000" }
+            cardExp.apply { "9999-12-31" }
+            Log.d("Error","simpleRequest:${it}")
+        }
+    )
+    queue.add(stringRequest)
+}
+
+MainActivity
+
+package com.example.djh
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.djh.ui.theme.DjhTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            DjhTheme {
+                // A surface container using the 'background' color from the theme
+                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                    MainCompse()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MainCompse() {
+    val cardNum= rememberSaveable{ mutableStateOf("") }
+    val cardExp= rememberSaveable { mutableStateOf("") }
+    val cardHolderName = listOf(
+        "wu hu",
+        "dong jian",
+        "hao"
+    )
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(all = 5.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CreditCard(
+            cardNumber = cardNum.value,
+            cardHolderName = cardHolderName.random(),
+            cardExpiry = cardExp.value
+        )
+        Button(onClick = {
+            volleyReqest(context=context, cardNum, cardExp)
+        }) {
+            Text(text = "Load / Re-load")
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun VolleyPreview() {
+    DjhTheme {
+        MainCompse()
+    }
+}
+
+android
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.premission.INTERNET"></uses-permission>
+    <application
+        android:allowBackup="true"
+        android:usesCleartextTraffic="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Djh"
+        tools:targetApi="31">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Djh">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+
+
+
+
+
+
+
+
+ //Volley
+    implementation("com.android.volley:volley:1.2.1")
+    //gson
+    implementation("com.google.code.gson:gson:2.8.9")
